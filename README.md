@@ -32,7 +32,7 @@ class Cluster:
     host_type: HostType = primitized(default=HostType.WEB, modifier=lambda x: x.value)
     admins: Set[User] = primitized(
         default_factory=set,
-        modifier=lambda x: sorted(x), 
+        modifier=lambda x: sorted(x),
         validator: lambda x: len(x) > 0,
     )
 
@@ -99,5 +99,5 @@ Similar to protobuf and thrift, primitizer allows you to validate and serialize 
 Primitizer can generate any file format, just not json
 
 ## Why not jinja ?
-Primitizer is full Python, so you have access to the entire API. As such you can do whatever you want with the objects to are manipulating. 
+Primitizer is full Python, so you have access to the entire API. As such you can do whatever you want with the objects to are manipulating.
 Primitizer also offers strong validation primitives to allow you to check the data for errors before writing it out.
