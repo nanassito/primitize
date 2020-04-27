@@ -45,6 +45,7 @@ def primitized(
 
 
 def primitize(obj: Dataclass) -> Dict[str, Any]:
+    getattr(obj, "prepare_primitization", lambda: None)()
     result = {}
     for field_meta in fields(obj):
         _meta = field_meta.metadata.get("primitize", {})

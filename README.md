@@ -36,6 +36,12 @@ class Cluster:
         validator: lambda x: len(x) > 0,
     )
 
+    def prepare_primitization(self: "Cluster") -> None:
+        """If this method exists, it is called as the first step of primitization.
+        
+        It is typical to perform x-fields updates here."""
+        pass
+
 
 
 clusters ={
