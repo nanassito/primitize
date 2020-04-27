@@ -13,7 +13,7 @@ assert pipfile.read("Pipfile"), "Could not read Pipfile"
 
 setup(
     name="primitize",
-    version="1.0",
+    version="1.1",
     author="Dorian Jaminais",
     author_email="primitize@jaminais.fr",
     description="Primitize is a library that facilitates converting dataclass instances into primitive objects.",
