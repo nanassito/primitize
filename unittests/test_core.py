@@ -20,15 +20,15 @@ from primitize.core import primitize, primitized
         (primitized(), field(), "A([1, 2, 3])", {"a": [1, 2, 3]}, "List - no settings"),
         (primitized(), field(), "A(B(1))", {"a": {"b": 1}}, "Nested - no settings"),
         (primitized(rename="z"), field(), "A(a=1)", {"z": 1}, "Rename"),
-        (primitized(modifier=lambda x: x * 10), field(), "A(1)", {"a": 10}, "Modifier"),
+        (primitized(modifier=lambda v, o: v * 10), field(), "A(1)", {"a": 10}, "Modifier"),
         (
             field(),
-            primitized(writer=lambda x: None),
+            primitized(writer=lambda v, o: None),
             "A(B(1))",
             {"a": {}},
             "Nested Writer",
         ),
-        (primitized(writer=lambda x: None), field(), "A(B(1))", {}, "Writer"),
+        (primitized(writer=lambda v, o: None), field(), "A(B(1))", {}, "Writer"),
         (
             field(),
             primitized(unset_if_empty=True),

@@ -6,7 +6,7 @@ Primitize is a library that facilitates converting dataclass instances into prim
 ## Generating configuration files
 Imagine we want to generate configuration files for several clusters, we have good sensible defaults but nothing is always exactly the same. In this example, we want each cluster configuration to be written in a json file.
 
-```
+```python
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -28,19 +28,15 @@ class User:
 @dataclass
 class Cluster:
     name: str
-    size: int = primitized(validator=lambda x: x > 0)
-    host_type: HostType = primitized(default=HostType.WEB, modifier=lambda x: x.value)
+    size: int = primitized(validator=lambda v, o: v > 0)
+    host_type: HostType = primitized(
+        default=HostType.WEB, modifier=lambda v, o: v.value
+    )
     admins: Set[User] = primitized(
         default_factory=set,
-        modifier=lambda x: sorted(x),
-        validator: lambda x: len(x) > 0,
+        modifier=lambda v, o: sorted(x),
+        validator: lambda v, o: len(x) > 0,
     )
-
-    def prepare_primitization(self: "Cluster") -> None:
-        """If this method exists, it is called as the first step of primitization.
-        
-        It is typical to perform x-fields updates here."""
-        pass
 
 
 

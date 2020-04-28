@@ -15,9 +15,9 @@ FieldValue = TypeVar("FieldValue")
 def primitized(
     rename: Optional[str] = None,
     unset_if_empty: bool = False,
-    modifier: Callable[[FieldValue], Any] = lambda x: x,
-    validator: Callable[[FieldValue], Tuple[bool, str]] = lambda x: (True, ""),
-    writer: Optional[Callable[[FieldValue], None]] = None,
+    modifier: Callable[[FieldValue, Dataclass], Any] = lambda v, o: v,
+    validator: Callable[[FieldValue, Dataclass], Tuple[bool, str]] = lambda v, o: (True, ""),
+    writer: Optional[Callable[[FieldValue, Dataclass], None]] = None,
     metadata: Dict[str, Any] = None,
     **kwargs,
 ) -> Field:
@@ -30,6 +30,10 @@ def primitized(
     * validator: Function returning whether the value is valid or not and why.
     * writer: Function to write the value out to some file. Note that if a value
               is written, it is not part of the resulting object.
+
+    All functions are called with the with the field as the field's value as the
+    first argument and the full object as the second argument. Modifications to
+    the object are not guarantied to be taken into account.
     """
     metadata = metadata or {}
     metadata.setdefault("primitize", {})
@@ -45,21 +49,20 @@ def primitized(
 
 
 def primitize(obj: Dataclass) -> Dict[str, Any]:
-    getattr(obj, "prepare_primitization", lambda: None)()
     result = {}
+    _defaults = primitized().metadata["primitize"]
     for field_meta in fields(obj):
-        _meta = field_meta.metadata.get("primitize", {})
-        key = _meta.get("rename", None) or field_meta.name
-        value = getattr(obj, field_meta.name)
-        modifier = _meta.get("modifier", lambda x: x)
-        validator = _meta.get("validator", lambda x: (True, ""))
-        writer = _meta.get("writer", None)
+        ctx = deepcopy(obj)
+        _meta = {}
+        _meta.update(_defaults)
+        _meta.update(field_meta.metadata.get("primitize", {}))
 
-        value = modifier(value)
+        value = getattr(obj, field_meta.name)
+        value = _meta["modifier"](value, ctx)
         if is_dataclass(value):
             value = primitize(value)
 
-        is_valid, error_msg = validator(deepcopy(value))
+        is_valid, error_msg = _meta["validator"](deepcopy(value), ctx)
         assert is_valid, f"Object `{value}` failed validation: `{error_msg}`"
 
         if _meta.get("unset_if_empty", False):
@@ -68,8 +71,8 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
             if value is None:
                 continue  # Skipping this field it is empty
 
-        if writer is None:
-            result[key] = value
+        if _meta["writer"] is None:
+            result[_meta["rename"] or field_meta.name] = value
         else:
-            writer(value)
+            _meta["writer"](value, ctx)
     return result

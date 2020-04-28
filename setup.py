@@ -1,5 +1,9 @@
-from setuptools import setup
 from configparser import ConfigParser
+from datetime import date
+
+from setuptools import setup
+
+today = date.today()
 
 
 with open("README.md", "r") as fd:
@@ -10,10 +14,9 @@ pipfile = ConfigParser()
 assert pipfile.read("Pipfile"), "Could not read Pipfile"
 
 
-
 setup(
     name="primitize",
-    version="1.1",
+    version=f"{today:%Y}.{today:%m}.{today:%d}",
     author="Dorian Jaminais",
     author_email="primitize@jaminais.fr",
     description="Primitize is a library that facilitates converting dataclass instances into primitive objects.",
