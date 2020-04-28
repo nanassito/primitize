@@ -36,6 +36,13 @@ from primitize.core import primitize, primitized
             {"a": {}},
             "Unset if empty",
         ),
+        (
+            primitized(init=False),
+            field(),
+            "A()",
+            {"a": None},
+            "We need to support init=False",
+        ),
     ],
 )
 def test_behavior(field_a, field_b, instanciation, expected, msg):
@@ -121,16 +128,3 @@ def test_primitized(prim, field):
     left = {f: getattr(field, f) for f in field.__slots__}
     right = {f: getattr(prim, f) for f in prim.__slots__}
     assert left == right
-
-
-def test_prepare():
-    @dataclass
-    class Data:
-        a: str
-
-    d = Data("a")
-    primitize(d)  # Must succeed despite not having `prepare_primitization()`
-    d.prepare_primitization = prepprim_mock = Mock()
-    primitize(d)
-
-    assert prepprim_mock.call_count == 1

@@ -57,7 +57,7 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
         _meta.update(_defaults)
         _meta.update(field_meta.metadata.get("primitize", {}))
 
-        value = getattr(obj, field_meta.name)
+        value = getattr(obj, field_meta.name, None)
         value = _meta["modifier"](value, ctx)
         if is_dataclass(value):
             value = primitize(value)
