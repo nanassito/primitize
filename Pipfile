@@ -8,6 +8,8 @@ pytest = "*"
 black = "*"
 mypy = "*"
 flake8 = "*"
+requests = "*"
+urllib-ext = "*"
 
 [packages]
 typing-extensions = "*"
