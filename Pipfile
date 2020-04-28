@@ -10,12 +10,12 @@ mypy = "*"
 flake8 = "*"
 requests = "*"
 urllib-ext = "*"
-
-[packages]
-typing-extensions = "*"
 twine = "*"
 wheel = "*"
 setuptools = "*"
+
+[packages]
+typing-extensions = "*"
 
 [requires]
 python_version = "3.8"
