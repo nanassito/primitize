@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import Mock
@@ -20,7 +21,13 @@ from primitize.core import primitize, primitized
         (primitized(), field(), "A([1, 2, 3])", {"a": [1, 2, 3]}, "List - no settings"),
         (primitized(), field(), "A(B(1))", {"a": {"b": 1}}, "Nested - no settings"),
         (primitized(rename="z"), field(), "A(a=1)", {"z": 1}, "Rename"),
-        (primitized(modifier=lambda v, o: v * 10), field(), "A(1)", {"a": 10}, "Modifier"),
+        (
+            primitized(modifier=lambda v, o: v * 10),
+            field(),
+            "A(1)",
+            {"a": 10},
+            "Modifier",
+        ),
         (
             field(),
             primitized(writer=lambda v, o: None),
@@ -128,3 +135,18 @@ def test_primitized(prim, field):
     left = {f: getattr(field, f) for f in field.__slots__}
     right = {f: getattr(prim, f) for f in prim.__slots__}
     assert left == right
+
+
+def test_no_deepcopy():
+    @dataclass
+    class _Obj:
+        a: str
+
+        def __reduce__(self):
+            return tuple()  # Just break pickle
+
+    o = _Obj(1)
+    with pytest.raises(TypeError):
+        deepcopy(o)  # Ensure the test is valid
+
+    assert primitize(o) == {"a": 1}

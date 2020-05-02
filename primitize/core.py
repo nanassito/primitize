@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 from dataclasses import Field, field, fields, is_dataclass
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar
@@ -10,6 +11,7 @@ class Dataclass(Protocol):
 
 
 FieldValue = TypeVar("FieldValue")
+_LOG = logging.getLogger(__name__)
 
 
 def primitized(
@@ -52,7 +54,11 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
     result = {}
     _defaults = primitized().metadata["primitize"]
     for field_meta in fields(obj):
-        ctx = deepcopy(obj)
+        try:
+            ctx = deepcopy(obj)
+        except Exception as e:
+            _LOG.warn(f"Failed to deepcopy the object: {e}")
+            ctx = obj
         _meta = {}
         _meta.update(_defaults)
         _meta.update(field_meta.metadata.get("primitize", {}))
