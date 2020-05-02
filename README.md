@@ -94,12 +94,16 @@ Upon executing this, you will find the following files under `./output/`:
 
 # How is this different from X ?
 
-## Why not use protobuf or thrift ?
-Similar to protobuf and thrift, primitizer allows you to validate and serialize data. However you are in control of the serialization and the file format. Primitizer can easily generate pretty much any format (json, yaml, properties, xml, ini, etc.).
+|                        |   Primitize   | Protobuf/Thrift | TypedDict |   Jinja    |
+|------------------------|---------------|-----------------|-----------|------------|
+| Modifiers              |      Yes      |       No        |    No     |     No     |
+| Validators             | Type & Custom |      Type       |   Type    |     No     |
+| Language support       |  Python only  |    Multiple     |  Python   | Custom DSL |
+| Full Python API        |      Yes      |       No        |    Yes    |     No     |
+| Format flexibility     |      Yes      |       No        |    No     |     Yes    |
 
-## Why no use jsonnet ?
-Primitizer can generate any file format, just not json
-
-## Why not jinja ?
-Primitizer is full Python, so you have access to the entire API. As such you can do whatever you want with the objects to are manipulating.
-Primitizer also offers strong validation primitives to allow you to check the data for errors before writing it out.
+* Modifiers: Primitize allows you to define functions that will massage the values prior to serialization, this allows your to rename, or reformat data to make the serialization easier. A typical usecase for this is to have the values of a type that is easy to manipulate and use a modifier to rewrite it to the what your end format expects
+* Validators: Primitize uses standard Python typing so mypy will ensure you have type checking. In Primitize you can also define functions that allows you to ensure that the value is correct upon serialization.
+* Language support: Primitize is a python library, as such it is primarily useful in Python.
+* Full Python API: Unlike a restrictive DSL, with Primitize it is really just your Python program running, so you can do whatever you want, we just help you convert dataclasses into primitive types so it is easier to write out.
+* Format flexibility: Primitize doesn't write data out for you so you can write it out as anything you want. Do you want json ? `json.dumps(primitize(data))` Do you want yaml ? `yaml.dumps(primitize(data))`. It's that simple.
