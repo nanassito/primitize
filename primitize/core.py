@@ -12,6 +12,7 @@ class Dataclass(Protocol):
 
 FieldValue = TypeVar("FieldValue")
 _LOG = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
 def primitized(
@@ -50,15 +51,19 @@ def primitized(
     return field(metadata=metadata, **kwargs)
 
 
+def best_effort_deepcopy(obj: T) -> T:
+    try:
+        return deepcopy(obj)
+    except Exception as e:
+        _LOG.warn(f"Failed to deepcopy the object: {e}")
+        return obj
+
+
 def primitize(obj: Dataclass) -> Dict[str, Any]:
     result = {}
     _defaults = primitized().metadata["primitize"]
     for field_meta in fields(obj):
-        try:
-            ctx = deepcopy(obj)
-        except Exception as e:
-            _LOG.warn(f"Failed to deepcopy the object: {e}")
-            ctx = obj
+        ctx = best_effort_deepcopy(obj)
         _meta = {}
         _meta.update(_defaults)
         _meta.update(field_meta.metadata.get("primitize", {}))
@@ -68,7 +73,7 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
         if is_dataclass(value):
             value = primitize(value)
 
-        is_valid, error_msg = _meta["validator"](deepcopy(value), ctx)
+        is_valid, error_msg = _meta["validator"](best_effort_deepcopy(value), ctx)
         assert is_valid, f"Object `{value}` failed validation: `{error_msg}`"
 
         if _meta.get("unset_if_empty", False):
