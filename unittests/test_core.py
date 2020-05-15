@@ -22,7 +22,7 @@ from primitize.core import primitize, primitized
         (primitized(), field(), "A(B(1))", {"a": {"b": 1}}, "Nested - no settings"),
         (primitized(rename="z"), field(), "A(a=1)", {"z": 1}, "Rename"),
         (
-            primitized(modifier=lambda v, o: v * 10),
+            primitized(modifier=lambda o, v: v * 10),
             field(),
             "A(1)",
             {"a": 10},
@@ -30,12 +30,12 @@ from primitize.core import primitize, primitized
         ),
         (
             field(),
-            primitized(writer=lambda v, o: None),
+            primitized(writer=lambda o, v: None),
             "A(B(1))",
             {"a": {}},
             "Nested Writer",
         ),
-        (primitized(writer=lambda v, o: None), field(), "A(B(1))", {}, "Writer"),
+        (primitized(writer=lambda o, v: None), field(), "A(B(1))", {}, "Writer"),
         (
             field(),
             primitized(unset_if_empty=True),

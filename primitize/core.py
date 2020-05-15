@@ -18,9 +18,9 @@ T = TypeVar("T")
 def primitized(
     rename: Optional[str] = None,
     unset_if_empty: bool = False,
-    modifier: Callable[[FieldValue, Dataclass], Any] = lambda v, o: v,
-    validator: Callable[[FieldValue, Dataclass], Tuple[bool, str]] = lambda v, o: (True, ""),
-    writer: Optional[Callable[[FieldValue, Dataclass], None]] = None,
+    modifier: Callable[[Dataclass, FieldValue], Any] = lambda self, value: value,
+    validator: Callable[[Dataclass, FieldValue], Tuple[bool, str]] = lambda self, value: (True, ""),
+    writer: Optional[Callable[[Dataclass, FieldValue], None]] = None,
     metadata: Dict[str, Any] = None,
     **kwargs,
 ) -> Field:
@@ -69,11 +69,11 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
         _meta.update(field_meta.metadata.get("primitize", {}))
 
         value = getattr(obj, field_meta.name, None)
-        value = _meta["modifier"](value, ctx)
+        value = _meta["modifier"](ctx, value)
         if is_dataclass(value):
             value = primitize(value)
 
-        is_valid, error_msg = _meta["validator"](best_effort_deepcopy(value), ctx)
+        is_valid, error_msg = _meta["validator"](ctx, best_effort_deepcopy(value))
         assert is_valid, f"Object `{value}` failed validation: `{error_msg}`"
 
         if _meta.get("unset_if_empty", False):
@@ -85,5 +85,5 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
         if _meta["writer"] is None:
             result[_meta["rename"] or field_meta.name] = value
         else:
-            _meta["writer"](value, ctx)
+            _meta["writer"](ctx, value)
     return result
