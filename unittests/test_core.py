@@ -1,7 +1,7 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -150,3 +150,18 @@ def test_no_deepcopy():
         deepcopy(o)  # Ensure the test is valid
 
     assert primitize(o) == {"a": 1}
+
+
+def test_custom_primitize():
+    prim = Mock()
+    @dataclass
+    class _Obj:
+        a: str
+
+        def primitize(self):
+            return prim(self)
+    
+    o = _Obj(1)
+    o.primitize()
+
+    assert prim.call_args_list == [call(o)]

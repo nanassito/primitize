@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from dataclasses import Field, field, fields, is_dataclass
+from dataclasses import Field, dataclass, field, fields, is_dataclass
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar
 
 from typing_extensions import Protocol
@@ -19,7 +19,10 @@ def primitized(
     rename: Optional[str] = None,
     unset_if_empty: bool = False,
     modifier: Callable[[Dataclass, FieldValue], Any] = lambda self, value: value,
-    validator: Callable[[Dataclass, FieldValue], Tuple[bool, str]] = lambda self, value: (True, ""),
+    validator: Callable[
+        [Dataclass, FieldValue], Tuple[bool, str]
+    ] = lambda self, value: (True, ""),
+    # DeprecationWarning: Replaced with defining a `primitize()` method on the object
     writer: Optional[Callable[[Dataclass, FieldValue], None]] = None,
     metadata: Dict[str, Any] = None,
     **kwargs,
@@ -46,6 +49,11 @@ def primitized(
     _meta["unset_if_empty"] = unset_if_empty
     _meta["modifier"] = modifier
     _meta["validator"] = validator
+    if writer is not None:
+        _LOG.warning(
+            "DeprecationWarning: "
+            "Replaced with defining a `primitize()` method on the object"
+        )
     _meta["writer"] = writer
 
     return field(metadata=metadata, **kwargs)
@@ -59,7 +67,7 @@ def best_effort_deepcopy(obj: T) -> T:
         return obj
 
 
-def primitize(obj: Dataclass) -> Dict[str, Any]:
+def _default_primitize(obj: Dataclass) -> Dict[str, Any]:
     result = {}
     _defaults = primitized().metadata["primitize"]
     for field_meta in fields(obj):
@@ -85,5 +93,22 @@ def primitize(obj: Dataclass) -> Dict[str, Any]:
         if _meta["writer"] is None:
             result[_meta["rename"] or field_meta.name] = value
         else:
+            _LOG.warning(
+                "DeprecationWarning: "
+                "Replaced with defining a `primitize()` method on the object"
+            )
             _meta["writer"](ctx, value)
     return result
+
+
+@dataclass
+class Primitizable:
+    def primitize(self: "Primitizable") -> Dict[str, Any]:
+        return _default_primitize(self)
+
+
+def primitize(obj: Any) -> Dict[str, Any]:
+    if hasattr(obj, "primitize"):
+        return obj.primitize()
+    else:
+        return _default_primitize(obj)

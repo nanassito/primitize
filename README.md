@@ -2,6 +2,30 @@
 
 Primitize is a library that facilitates converting dataclass instances into primitive objects. It provides facilites to massage the data, validate it and write it out to file in pretty much any format you would want.
 
+# Interface
+```python
+from dataclasses import dataclass
+
+from primitize.core import Primitizable, primitize, primitized
+
+
+@dataclass
+class Obj(Primitizable):
+    a: int
+    b: bool = primitized(modifier=lambda self, b: str(b).lower())
+
+    def primitize(self):
+        return json.dump(super().primitize(self))
+
+
+primitize(Obj(1, True)) == '{"a": 1, "b": "true"}'
+```
+Primitize will convert any data class down to primitive types. When calling `primitize(d)` on any `d` dataclass, it will execute the `d.primitize()` method if it is defined, otherwise it will use a default implementation. 
+The default implementation will loop over every field defined in the dataclass. Each field is serialized in a 2 step process:
+1. First call the `modifier(object, field_value)`.
+2. The return of this is then passed into `validator(object, return_of_the_modifier)`.
+
+
 # Example usage
 ## Generating configuration files
 Imagine we want to generate configuration files for several clusters, we have good sensible defaults but nothing is always exactly the same. In this example, we want each cluster configuration to be written in a json file.
@@ -26,7 +50,7 @@ class User:
 
 
 @dataclass
-class Cluster:
+class Cluster(Primizable):
     name: str
     size: int = primitized(validator=lambda v, o: v > 0)
     host_type: HostType = primitized(
@@ -38,6 +62,11 @@ class Cluster:
         validator: lambda v, o: len(x) > 0,
     )
 
+    def primitize(self):
+        prim = super().primitize(self)
+        payload = json.dumps(prim, sort_keys=True, indent=4)
+        with (Path(".") / "output" / f"{self.name}.json").open("w") as fd:
+            fd.write(payload)
 
 
 clusters ={
@@ -47,10 +76,7 @@ clusters ={
 }
 
 for cluster in clusters:
-    prim = primitize(cluster)
-    payload = json.dumps(prim, sort_keys=True, indent=4)
-    with (Path(".") / "output" / f"{cluster.name}.json").open("w") as fd:
-        fd.write(payload)
+    primitize(cluster)
 ```
 
 Upon executing this, you will find the following files under `./output/`:
