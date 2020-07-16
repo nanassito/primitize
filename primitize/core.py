@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from dataclasses import Field, dataclass, field, fields, is_dataclass
-from typing import Any, Callable, Dict, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
 from typing_extensions import Protocol
 
@@ -23,7 +23,7 @@ def primitized(
         [Dataclass, FieldValue], Tuple[bool, str]
     ] = lambda self, value: (True, ""),
     # DeprecationWarning: Replaced with defining a `primitize()` method on the object
-    writer: Optional[Callable[[Dataclass, FieldValue], None]] = None,
+    writer: Any = None,
     metadata: Dict[str, Any] = None,
     **kwargs,
 ) -> Field:
@@ -34,8 +34,6 @@ def primitized(
     * unset_if_empty: Whether the field is added or not when the value it empty.
     * modifier: Function to replace the value, useful for reformating.
     * validator: Function returning whether the value is valid or not and why.
-    * writer: Function to write the value out to some file. Note that if a value
-              is written, it is not part of the resulting object.
 
     All functions are called with the with the field as the field's value as the
     first argument and the full object as the second argument. Modifications to
@@ -49,12 +47,9 @@ def primitized(
     _meta["unset_if_empty"] = unset_if_empty
     _meta["modifier"] = modifier
     _meta["validator"] = validator
-    if writer is not None:
-        _LOG.warning(
-            "DeprecationWarning: "
-            "Replaced with defining a `primitize()` method on the object"
-        )
-    _meta["writer"] = writer
+    assert (
+        writer is None
+    ), "writer() is replaced by overriding the `primitize()` method."
 
     return field(metadata=metadata, **kwargs)
 
@@ -67,7 +62,7 @@ def best_effort_deepcopy(obj: T) -> T:
         return obj
 
 
-def _default_primitize(obj: Dataclass) -> Dict[str, Any]:
+def _default_primitize(obj: Union[Dataclass, "Primitizable"]) -> Dict[str, Any]:
     result = {}
     _defaults = primitized().metadata["primitize"]
     for field_meta in fields(obj):
@@ -90,14 +85,7 @@ def _default_primitize(obj: Dataclass) -> Dict[str, Any]:
             if value is None:
                 continue  # Skipping this field it is empty
 
-        if _meta["writer"] is None:
-            result[_meta["rename"] or field_meta.name] = value
-        else:
-            _LOG.warning(
-                "DeprecationWarning: "
-                "Replaced with defining a `primitize()` method on the object"
-            )
-            _meta["writer"](ctx, value)
+        result[_meta["rename"] or field_meta.name] = value
     return result
 
 

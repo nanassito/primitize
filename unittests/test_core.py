@@ -30,14 +30,6 @@ from primitize.core import primitize, primitized
         ),
         (
             field(),
-            primitized(writer=lambda o, v: None),
-            "A(B(1))",
-            {"a": {}},
-            "Nested Writer",
-        ),
-        (primitized(writer=lambda o, v: None), field(), "A(B(1))", {}, "Writer"),
-        (
-            field(),
             primitized(unset_if_empty=True),
             "A(B([]))",
             {"a": {}},
@@ -70,7 +62,7 @@ def test_behavior(field_a, field_b, instanciation, expected, msg):
     ("prim", "field"),
     [
         (
-            primitized(modifier=1, validator=2, writer=3),
+            primitized(modifier=1, validator=2),
             field(
                 metadata={
                     "primitize": {
@@ -78,15 +70,12 @@ def test_behavior(field_a, field_b, instanciation, expected, msg):
                         "unset_if_empty": False,
                         "modifier": 1,
                         "validator": 2,
-                        "writer": 3,
                     }
                 }
             ),
         ),
         (
-            primitized(
-                rename="a", unset_if_empty=True, modifier=1, validator=2, writer=3
-            ),
+            primitized(rename="a", unset_if_empty=True, modifier=1, validator=2),
             field(
                 metadata={
                     "primitize": {
@@ -94,13 +83,12 @@ def test_behavior(field_a, field_b, instanciation, expected, msg):
                         "unset_if_empty": True,
                         "modifier": 1,
                         "validator": 2,
-                        "writer": 3,
                     }
                 }
             ),
         ),
         (
-            primitized(modifier=1, validator=2, writer=3, default=int),
+            primitized(modifier=1, validator=2, default=int),
             field(
                 default=int,
                 metadata={
@@ -109,13 +97,12 @@ def test_behavior(field_a, field_b, instanciation, expected, msg):
                         "unset_if_empty": False,
                         "modifier": 1,
                         "validator": 2,
-                        "writer": 3,
                     }
                 },
             ),
         ),
         (
-            primitized(modifier=1, validator=2, writer=3, metadata={"foo": "bar"}),
+            primitized(modifier=1, validator=2, metadata={"foo": "bar"}),
             field(
                 metadata={
                     "foo": "bar",
@@ -124,7 +111,6 @@ def test_behavior(field_a, field_b, instanciation, expected, msg):
                         "unset_if_empty": False,
                         "modifier": 1,
                         "validator": 2,
-                        "writer": 3,
                     },
                 }
             ),
@@ -154,13 +140,14 @@ def test_no_deepcopy():
 
 def test_custom_primitize():
     prim = Mock()
+
     @dataclass
     class _Obj:
         a: str
 
         def primitize(self):
             return prim(self)
-    
+
     o = _Obj(1)
     o.primitize()
 
