@@ -20,7 +20,7 @@ class Obj(Primitizable):
 
 primitize(Obj(1, True)) == '{"a": 1, "b": "true"}'
 ```
-Primitize will convert any data class down to primitive types. When calling `primitize(d)` on any `d` dataclass, it will execute the `d.primitize()` method if it is defined, otherwise it will use a default implementation. 
+Primitize will convert any data class down to primitive types. When calling `primitize(d)` on any `d` dataclass, it will execute the `d.primitize()` method if it is defined, otherwise it will use a default implementation.
 The default implementation will loop over every field defined in the dataclass. Each field is serialized in a 2 step process:
 1. First call the `modifier(object, field_value)`.
 2. The return of this is then passed into `validator(object, return_of_the_modifier)`.
