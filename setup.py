@@ -1,9 +1,9 @@
 from configparser import ConfigParser
 from datetime import date
 
-import requests
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 from setuptools import setup
-from urllib_ext.parse import urlparse
 
 
 with open("README.md", "r") as fd:
@@ -16,12 +16,19 @@ def get_dependencies():
     return list(pipfile["packages"])
 
 
+def project_version_exists(project, version):
+    project_url = f"https://pypi.org/project/{project}"
+    try:
+        return urlopen(f"{project_url}/{version}").status == 200
+    except (HTTPError, URLError):
+        return False
+
+
 def get_next_version(project: str):
-    project_url = urlparse("https://pypi.org/project") / project
     today = date.today()
     version = f"{today:%Y}.{today:%m}.{today:%d}"
     minor = 0
-    while requests.get(str(project_url / version)).status_code == 200:
+    while project_version_exists(project, version):
         minor += 1
         version = f"{today:%Y}.{today:%m}.{today:%d}.{minor}"
     return version
@@ -36,7 +43,12 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/nanassito/primitize",
-    packages=["primitize"],
+    packages={
+        "primitize": ["primitize"],
+    },
+    package_data={
+        "primitize": ["py.typed"],
+    },
     test_suite="unittests",
     classifiers=[
         "Programming Language :: Python :: 3",
