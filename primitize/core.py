@@ -22,8 +22,6 @@ def primitized(
     validator: Callable[
         [Dataclass, FieldValue], Tuple[bool, str]
     ] = lambda self, value: (True, ""),
-    # DeprecationWarning: Replaced with defining a `primitize()` method on the object
-    writer: Any = None,
     metadata: Dict[str, Any] = None,
     **kwargs,
 ) -> Field:
@@ -47,10 +45,6 @@ def primitized(
     _meta["unset_if_empty"] = unset_if_empty
     _meta["modifier"] = modifier
     _meta["validator"] = validator
-    assert (
-        writer is None
-    ), "writer() is replaced by overriding the `primitize()` method."
-
     return field(metadata=metadata, **kwargs)
 
 
