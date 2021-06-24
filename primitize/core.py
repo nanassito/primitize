@@ -1,7 +1,15 @@
 import logging
 from copy import deepcopy
-from dataclasses import Field, dataclass, field, fields, is_dataclass
-from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from typing_extensions import Protocol
 
@@ -24,7 +32,8 @@ def primitized(
     ] = lambda self, value: (True, ""),
     metadata: Dict[str, Any] = None,
     **kwargs,
-) -> Field:
+    # The return value is Field, but we need to trick mypy into believing it is a FieldValue.
+) -> FieldValue:
     """Overload of dataclass.field.
 
     There is a couple more attributes to add metadata specific to tpl8tr:
@@ -58,7 +67,7 @@ def best_effort_deepcopy(obj: T) -> T:
 
 def _default_primitize(obj: Union[Dataclass, "Primitizable"]) -> Dict[str, Any]:
     result = {}
-    _defaults = primitized().metadata["primitize"]
+    _defaults = primitized().metadata["primitize"]  # type: ignore
     for field_meta in fields(obj):
         ctx = best_effort_deepcopy(obj)
         _meta = {}
